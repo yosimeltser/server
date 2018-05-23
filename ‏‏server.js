@@ -1,5 +1,3 @@
-//this is only an example, handling everything is yours responsibilty !
-
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
@@ -8,14 +6,30 @@ var jwt    = require('jsonwebtoken');
 app.use(cors());
 var DButilsAzure = require('./DButils');
 
+//only registered users can operate functions on the file regUsers. 
+var signInUsers= require ('./routes/signInUsers')
+app.use('/onBoard',regUsers);
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
+
+
 //local host 
 var port = 4000;
+
+
 app.listen(port, function () {
     console.log('Example app listening on port ' + port);
 });
 var  superSecret = "AKAunbreakable";
+app.use(function (req, res, next) {
+
+    console.log("server got request");
+    next();
+
+});
+
 //register for our page 
 //insert new row into the DB
 app.post('/register',function (req,res){
@@ -41,6 +55,7 @@ app.post('/register',function (req,res){
         console.log(err);
     })
 });
+//when you are loggen in you wre onboard, because we are creating a teken for a session (24H).
 app.post('/login', function (req,res){
     var Username = req.body.Username;
     var UserPass=req.body.UserPass;
@@ -48,7 +63,7 @@ app.post('/login', function (req,res){
     DButilsAzure.execQuery(sql)    
     .then(function(result){
         var counter=JSON.parse(result[0][""]);
-        if (counter==2) {
+        if (counter==1) {
                 //the user is registered, create a token for him. 
                 var payload= {Username: Username}
                 var token= jwt.sign(payload,superSecret, {expiresIn: "1d" });
@@ -69,8 +84,7 @@ app.post('/login', function (req,res){
     
 });
 // route middleware to verify a token
-app.use('/reg', function (req, res, next) {
-
+app.use('/onBoard', function (req, res, next) {
     // check header or url parameters or post parameters for token
     var token = req.body.token || req.query.token || req.headers['x-access-token'];
 
@@ -103,6 +117,5 @@ app.use('/reg', function (req, res, next) {
     }
 
 })
-
 
 
