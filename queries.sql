@@ -10,22 +10,19 @@
 --     UserPass varchar(10)
 -- );
 -- GO
+-------------------------------------------------
 -- GO 
--- DROP TABLE registeredUsers
+--     SELECT * FROM Questions  
 -- GO
-GO 
-    SELECT * FROM Questions  
-GO
--- 
+------------------------------------------------- 
 -- GO
 -- CREATE TABLE Categories(
 --     Category VARCHAR(255) NOT NULL,
 --     FK_Username VARCHAR (8) NOT NULL FOREIGN KEY REFERENCES registeredUsers(Username) ,
---     CONSTRAINT PK_Categories PRIMARY KEY (Category,FK_Username),
-
-
+--     CONSTRAINT PK_Categories PRIMARY KEY (Category,FK_Username)
 -- );
 -- GO
+-------------------------------------------------
 -- GO
 -- CREATE TABLE Questions(
 --     Question VARCHAR(255) NOT NULL,
@@ -34,17 +31,46 @@ GO
 --     CONSTRAINT PK_Questions PRIMARY KEY (Question,FK_Username)
 -- );
 -- GO
+------------------------------------------------
 -- GO
 -- INSERT INTO registeredUsers(Username,FirstName,LastName,
 -- City,Country,Email,UserPass)
 -- VALUES ('zoharavr','Zohar','Avraham',
 -- 'New York','USA','zoharavr"post.bgu.ac.il','z123456');
 -- GO
+-------------------------------------------------
 -- GO
--- INSERT INTO  Questions(Question,Answer,FK_Username)
--- VALUES ('What is your favorite animal','panda','zoharavr');
+-- CREATE TABLE Points(
+--     ID int IDENTITY(1,1) PRIMARY KEY,
+--     PointName VARCHAR(255) NOT NULL,
+--     Category VARCHAR(255),
+--     Views int,
+--     Ratings real,
+--     Ref VARCHAR (255)
+-- );
 -- GO
-
-
-
-
+-- ----------------------------------------------------
+-- GO
+-- CREATE TABLE Comments(
+--     FK_ID int  FOREIGN KEY REFERENCES Points(ID),
+--     FK_Username VARCHAR (8) FOREIGN KEY REFERENCES registeredUsers(Username),
+--     Comment VARCHAR(255) NOT NULL,
+--     CONSTRAINT PK_Comments PRIMARY KEY (FK_ID,FK_Username)
+-- );
+-- GO
+---------------------------------------------------
+-- GO
+-- INSERT INTO Points(PointName,Category,Views,Ratings)
+-- VALUES ('Sydney Opera House','Historic Site',0,0);
+-- GO
+-----------------------------------------------------
+-- GO
+-- CREATE TABLE Favorites(
+--     FK_ID int  FOREIGN KEY REFERENCES Points(ID),
+--     FK_Username VARCHAR (8) FOREIGN KEY REFERENCES registeredUsers(Username),
+--     CONSTRAINT PK_Favorites PRIMARY KEY (FK_ID,FK_Username)
+-- );
+-- GO
+GO
+SELECT * FROM Favorites
+GO

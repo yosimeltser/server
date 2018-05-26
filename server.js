@@ -5,10 +5,8 @@ var cors = require('cors');
 var jwt = require('jsonwebtoken');
 app.use(cors());
 var DButilsAzure = require('./DButils');
-
 //only registered users can operate functions on the file regUsers. 
 var signInUsers = require('./routes/signInUsers')
-app.use('/onBoard', regUsers);
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -72,12 +70,13 @@ app.post('/register', function (req, res) {
     var Country = req.body.Country;
     var Email = req.body.Email;
     var Categories = req.body.Categories;
+    var Questions = req.body.Questions;
     var Verifiers = req.body.Verifiers;
     var Username = req.body.Username;
     var UserPass = req.body.UserPass;
     //query
-    ans = check_input(Username,UserPass);
-    if(ans[0]){
+    let ans = check_input(Username,UserPass);
+    if(ans['flag']){
     var sql = "INSERT INTO  [registeredUsers]  ([Username],[FirstName],[LastName],[City],[Country] ,[Email], [UserPass])"
         + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
         DButilsAzure.execQuery(sql)
@@ -97,16 +96,19 @@ app.post('/register', function (req, res) {
             console.log(err);
         })
     }
-    // for(let i=0;i<Verifiers.length;i++){
-    //     let verifyy_q="INSERT INTO  [Categories] ([Category],[FK_Username])"+
-    //     " VALUES ('" + Categories[i] + "','" + Username + "' )";
-    //     DButilsAzure.execQuery(verifyy_q)
-    //     .then(function (result) {
-    //     })
-    //     .catch(function (err) {
-    //         console.log(err);
-    //     })
-    // }
+    for(let i=0;i<Questions.length;i++){
+        for(let j=0;j<Verifiers.length;j++){
+        let verifyy_q="INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])"+
+        " VALUES ('" + Questions[i] + "','"+Verifiers[j] +"','"+ Username + "' )";
+        DButilsAzure.execQuery(verifyy_q)
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
+    }
+    }
     }
     else {
         res.send(ans[1]);
@@ -127,7 +129,7 @@ app.post('/login', function (req, res) {
                 res.json({
                     success: true,
                     message: 'Enjoy your token!',
-                    teken: token
+                    token: token
                 });
             }
             else {
@@ -138,10 +140,9 @@ app.post('/login', function (req, res) {
             console.log(err);
         })
 
-
 });
 // route middleware to verify a token
-app.use('/onBoard', function (req, res, next) {
+app.use('/Users', function (req, res, next) {
     // check header or url parameters or post parameters for token
     var token = req.body.token || req.query.token || req.headers['x-access-token'];
 
@@ -173,6 +174,19 @@ app.use('/onBoard', function (req, res, next) {
         });
     }
 
-})
+});
+app.use('/Users', signInUsers);
+
+app.get("/getPoints",function(req,res){
+    let verifyy_q="SELECT * FROM  [Points]";
+    DButilsAzure.execQuery(verifyy_q)
+    .then(function (result) {
+        res.send(JSON.stringify(result));
+    })
+    .catch(function (err) {
+        console.log(err);
+    })
+});
+
 
 
