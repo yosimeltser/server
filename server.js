@@ -178,15 +178,26 @@ app.use('/Users', function (req, res, next) {
 app.use('/Users', signInUsers);
 
 app.get("/getPoints",function(req,res){
-    let verifyy_q="SELECT * FROM  [Points]";
-    DButilsAzure.execQuery(verifyy_q)
+    let points_q="SELECT * FROM  [Points]";
+    DButilsAzure.execQuery(points_q)
     .then(function (result) {
-        res.send(JSON.stringify(result));
+        res.send(result);
     })
     .catch(function (err) {
         console.log(err);
     })
 });
 
-
+//get 3 random points for not registered/logged in users
+//CHECK IF NEWID NOT A HEAVY TASK, CHECK IF THE POINTS THAT RETURNED STANDS WITH CONDITION
+app.get("/Get3RendomPoints",function(req,res){
+    let random_q="SELECT TOP 3 * FROM  [Points] WHERE Ratings>60 ORDER BY NEWID()";
+    DButilsAzure.execQuery(random_q)
+    .then(function (result) {
+        res.send(result);
+    })
+    .catch(function (err) {
+        console.log(err);
+    })
+});
 

@@ -61,16 +61,24 @@
 ---------------------------------------------------
 -- GO
 -- INSERT INTO Points(PointName,Category,Views,Ratings)
--- VALUES ('Sydney Opera House','Historic Site',0,0);
+-- VALUES ('Salt Meats Cheese‬','Food',0,0);
 -- GO
 -----------------------------------------------------
 -- GO
 -- CREATE TABLE Favorites(
 --     FK_ID int  FOREIGN KEY REFERENCES Points(ID),
 --     FK_Username VARCHAR (8) FOREIGN KEY REFERENCES registeredUsers(Username),
+--     Added int IDENTITY(1,1),
 --     CONSTRAINT PK_Favorites PRIMARY KEY (FK_ID,FK_Username)
 -- );
 -- GO
+------------------------------------------------------
+-- GO
+-- ALTER TABLE Comments
+-- ADD Date_Comment DATE;
+-- GO
 GO
-SELECT * FROM Favorites
+SELECT * FROM Points INNER JOIN
+(SELECT TOP 2 FK_ID,  ROW_NUMBER() over (ORDER BY FK_ID DESC) AS Number
+FROM Favorites WHERE FK_Username='zoharavr') AS L ON L.FK_ID=Points.ID
 GO
