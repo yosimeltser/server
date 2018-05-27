@@ -94,6 +94,20 @@ router.get("/GetLast2Saved", function (req, res) {
             console.log(err);
         })
 });
+//returns 2 of the most popular POI by the categories that the user choose in registeration.
+router.get('/Get2InterestPoint',function(req,res){
+    var Username = req.decoded.payload.Username;
+    let popular="SELECT TOP 2 * FROM Points INNER JOIN"+
+    "(SELECT Category FROM Categories WHERE FK_Username="+"'"+Username+"'"+ ") AS L ON L.Category=Points.Category"+
+    "ORDER BY Points.Views DESC ";
+    DButilsAzure.execQuery(popular)
+    .then(function (result) {
+       res.send(result);
+    })
+    .catch(function (err) {
+        console.log(err);
+    })
+});
 
 function computeRating(PointID, rank) {
     var rate,count;
@@ -119,4 +133,6 @@ function computeRating(PointID, rank) {
     let final = (calc / count * 5) * 100;
     return final;
 }
+
+
 module.exports = router;

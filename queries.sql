@@ -78,7 +78,7 @@
 -- ADD Date_Comment DATE;
 -- GO
 GO
-SELECT * FROM Points INNER JOIN
-(SELECT TOP 2 FK_ID,  ROW_NUMBER() over (ORDER BY FK_ID DESC) AS Number
-FROM Favorites WHERE FK_Username='zoharavr') AS L ON L.FK_ID=Points.ID
+SELECT TOP 2 * FROM Points INNER JOIN
+(SELECT Category FROM Categories WHERE FK_Username='zoharavr') AS L ON L.Category=Points.Category
+ORDER BY Points.Ratings DESC 
 GO
