@@ -62,23 +62,52 @@ router.get("/interestPoint/:id", function (req, res) {
 });
 
 router.post('/Review', function (req, res) {
-    var d = new Date(year, month, day);
+    var d = new Date();
+    var comment_q;
+    var date = d.getFullYear() + "-" + d.getMonth() + "-" + d.getDate();
     var Username = req.decoded.payload.Username;
     var comment = req.body.Review.Comment;
     var PointID = req.body.ID;
-    let comment_q = "INSERT INTO  [Comments] ([FK_ID],[FK_Username],[Comment],[Date_Comment])" +
-        " VALUES ('" + PointID + "','" + Username + "','" + comment + "','" + d + "' )";
+    var Rank = req.body.Review.Rank;
+    if (Rank === undefined) {
+        comment_q = "INSERT INTO  [Comments] ([FK_ID],[FK_Username],[Comment],[Date_Comment])" +
+            " VALUES (" + PointID + ",'" + Username + "','" + comment + "','" + date + "')";
+    } else {
+        comment_q = "INSERT INTO  [Comments] ([FK_ID],[FK_Username],[Comment],[Date_Comment],[Rank])" +
+            " VALUES (" + PointID + ",'" + Username + "','" + comment + "','" + date + "','" + Rank + "' )";
+    }
     DButilsAzure.execQuery(comment_q)
         .then(function (result) {
-        })
-        .catch(function (err) {
+            if (Rank !== undefined) {
+                var avg;
+                var id = parseInt(PointID);
+                var q = "select AVG(Rank) from Comments where FK_ID=" + id;
+                DButilsAzure.execQuery(q)
+                    .then(function (result) {
+                        console.log(result[0][""]);
+                        avg = parseFloat(result[0][""]);
+                        var calc = avg * 20;
+                        let update = "UPDATE Points SET Ratings =" + calc + " WHERE ID=" + PointID;
+                        DButilsAzure.execQuery(update)
+                            .then(function (res1) {
+                                res.send('update rank');
+                                //  var final = computeRating(PointID);
+                                // console.log(final);
+                                // let update = "UPDATE Points SET Ratings =" + final + " WHERE ID=" + PointID;
+                                // DButilsAzure.execQuery(update)
+                                //     .then(function (res1) {
+                                //         res1.send('update rank');
+                                //     })
+                            })
+                            .catch(function (err) {
+                                console.log(err);
+                            })
+
+                    });
+            }
+        }).catch(function (err) {
             console.log(err);
         })
-    if (req.body.Review.Rank !== undefined) {
-        var final =computeRating(PointID,req.body.Review.Rank);
-        let update = "UPDATE Points SET Ratings =" + final + " WHERE ID=" + PointID;
-    }
-
 });
 //returns the the last 2 saved point bt the user
 router.get("/GetLast2Saved", function (req, res) {
@@ -95,43 +124,33 @@ router.get("/GetLast2Saved", function (req, res) {
         })
 });
 //returns 2 of the most popular POI by the categories that the user choose in registeration.
-router.get('/Get2InterestPoint',function(req,res){
+router.get('/Get2InterestPoint', function (req, res) {
     var Username = req.decoded.payload.Username;
-    let popular="SELECT TOP 2 * FROM Points INNER JOIN"+
-    "(SELECT Category FROM Categories WHERE FK_Username="+"'"+Username+"'"+ ") AS L ON L.Category=Points.Category"+
-    "ORDER BY Points.Views DESC ";
+    let popular = "SELECT TOP 2 * FROM Points INNER JOIN" +
+        "(SELECT Category FROM Categories WHERE FK_Username=" + "'" + Username + "'" + ") AS L ON L.Category=Points.Category" +
+        "ORDER BY Points.Views DESC ";
     DButilsAzure.execQuery(popular)
-    .then(function (result) {
-       res.send(result);
-    })
-    .catch(function (err) {
-        console.log(err);
-    })
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
 });
 
-function computeRating(PointID, rank) {
-    var rate,count;
-    let q = "SELECT Ratings FROM Points WHERE ID=" + PointID;
-    DButilsAzure.execQuery(q)
-    .then(function (result) {
-        rate=parseInt(result);
-    })
-    .catch(function (err) {
-        console.log(err);
-    })
-    let c = "SELECT COUNT(FK_ID) FROM Comments WHERE ID=" + PointID;
-    DButilsAzure.execQuery(c)
-    .then(function (result) {
-        count=parseInt(result);
-    })
-    .catch(function (err) {
-        console.log(err);
-    })
-
-    let calc = rate * (count - 1);
-    calc = calc + parseInt(rank);
-    let final = (calc / count * 5) * 100;
-    return final;
+function computeRating(PointID) {
+    return new Promise(function (fulfill, reject) {
+        var avg;
+        var id = parseInt(PointID);
+        var q = "select AVG(Rank) from Comments where FK_ID=" + id;
+        DButilsAzure.execQuery(q)
+            .then(function (result) {
+                console.log(result[0][""]);
+                avg = parseFloat(result[0][""]);
+                var calc = avg * 20;
+                resolve(calc);
+            })
+    });
 }
 
 

@@ -77,8 +77,14 @@
 -- ALTER TABLE Comments
 -- ADD Date_Comment DATE;
 -- GO
+-- GO
+-- SELECT TOP 2 * FROM Points INNER JOIN
+-- (SELECT Category FROM Categories WHERE FK_Username='zoharavr') AS L ON L.Category=Points.Category
+-- ORDER BY Points.Ratings DESC 
+-- GO
 GO
-SELECT TOP 2 * FROM Points INNER JOIN
-(SELECT Category FROM Categories WHERE FK_Username='zoharavr') AS L ON L.Category=Points.Category
-ORDER BY Points.Ratings DESC 
+SELECT * FROM Points
+GO
+GO
+DELETE  FROM Comments
 GO
