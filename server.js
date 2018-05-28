@@ -75,46 +75,46 @@ app.post('/register', function (req, res) {
     var Username = req.body.Username;
     var UserPass = req.body.UserPass;
     //query
-    let ans = check_input(Username,UserPass);
-    if(ans['flag']){
-    var sql = "INSERT INTO  [registeredUsers]  ([Username],[FirstName],[LastName],[City],[Country] ,[Email], [UserPass])"
-        + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
+    let ans = check_input(Username, UserPass);
+    if (ans['flag']) {
+        var sql = "INSERT INTO  [registeredUsers]  ([Username],[FirstName],[LastName],[City],[Country] ,[Email], [UserPass])"
+            + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
         DButilsAzure.execQuery(sql)
-        .then(function (result) {
-           // res.send(result);
-        })
-        .catch(function (err) {
-            console.log(err);
-        })
-    for(let i=0;i<Categories.length;i++){
-        let category_q="INSERT INTO  [Categories] ([Category],[FK_Username])"+
-        " VALUES ('" + Categories[i] + "','" + Username + "' )";
-        DButilsAzure.execQuery(category_q)
-        .then(function (result) {
-        })
-        .catch(function (err) {
-            console.log(err);
-        })
-    }
-    for(let i=0;i<Questions.length;i++){
-        for(let j=0;j<Verifiers.length;j++){
-        let verifyy_q="INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])"+
-        " VALUES ('" + Questions[i] + "','"+Verifiers[j] +"','"+ Username + "' )";
-        DButilsAzure.execQuery(verifyy_q)
-        .then(function (result) {
-            res.send(result);
-        })
-        .catch(function (err) {
-            console.log(err);
-        })
-    }
-    }
+            .then(function (result) {
+                // res.send(result);
+            })
+            .catch(function (err) {
+                console.log(err);
+            })
+        for (let i = 0; i < Categories.length; i++) {
+            let category_q = "INSERT INTO  [Categories] ([Category],[FK_Username])" +
+                " VALUES ('" + Categories[i] + "','" + Username + "' )";
+            DButilsAzure.execQuery(category_q)
+                .then(function (result) {
+                })
+                .catch(function (err) {
+                    console.log(err);
+                })
+        }
+        for (let i = 0; i < Questions.length; i++) {
+            for (let j = 0; j < Verifiers.length; j++) {
+                let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
+                    " VALUES ('" + Questions[i] + "','" + Verifiers[j] + "','" + Username + "' )";
+                DButilsAzure.execQuery(verifyy_q)
+                    .then(function (result) {
+                        res.send(result);
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+            }
+        }
     }
     else {
         res.send(ans[1]);
     }
 });
-//when you are loggen in you wre onboard, because we are creating a teken for a session (24H).
+//when you are logged in you are onboard, because we are creating a token for a session (24H).
 app.post('/login', function (req, res) {
     var Username = req.body.Username;
     var UserPass = req.body.UserPass;
@@ -141,6 +141,79 @@ app.post('/login', function (req, res) {
         })
 
 });
+//retrieve all user questions
+app.get("/restoreQuestions/:Username", function (req, res) {
+    var Username = req.params.Username;
+    let last_saved = "SELECT Question FROM Questions Where  FK_Username='" + Username + "'";
+    DButilsAzure.execQuery(last_saved)
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
+});
+
+//check if the user answered right
+app.post("/restoreAnswer", function(req,res){
+    var Username= req.body.Username; 
+    var answer1=req.body.answer1;
+    var answer2=req.body.answer2;
+    console.log('sa');
+    let last_saved = "SELECT COUNT(Question) FROM Questions Where  FK_Username='"+Username+"' AND (Answer='"+answer1+ "' OR Answer='"+answer2+"')";
+    let sql = "select UserPass from registeredUsers  where Username='" + Username +"'";
+    DButilsAzure.execQuery(last_saved)
+            .then(function (result) {
+                var counter = JSON.parse(result[0][""]);
+                if (counter>=1) {
+                DButilsAzure.execQuery(sql)
+                    .then(function(result1){
+                        res.send(result1);
+                    })
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+            })
+});
+
+app.get("/getPoints", function (req, res) {
+    let points_q = "SELECT * FROM  [Points]";
+    DButilsAzure.execQuery(points_q)
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
+});
+
+//get 3 random points for not registered/logged in users
+//CHECK IF NEWID NOT A HEAVY TASK, CHECK IF THE POINTS THAT RETURNED STANDS WITH CONDITION
+app.get("/Get3RendomPoints", function (req, res) {
+    let random_q = "SELECT TOP 3 * FROM  [Points] WHERE Ratings>60 ORDER BY NEWID()";
+    DButilsAzure.execQuery(random_q)
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
+});
+//everybodt can watch interest point info
+app.get("/interestPoint/:id", function (req, res) {
+    var PointID = req.params.id;
+    let random_q = "SELECT  * FROM  [Points] WHERE ID=" + PointID;
+    DButilsAzure.execQuery(random_q)
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            console.log(err);
+        })
+});
+
+
 // route middleware to verify a token
 app.use('/Users', function (req, res, next) {
     // check header or url parameters or post parameters for token
@@ -176,28 +249,4 @@ app.use('/Users', function (req, res, next) {
 
 });
 app.use('/Users', signInUsers);
-
-app.get("/getPoints",function(req,res){
-    let points_q="SELECT * FROM  [Points]";
-    DButilsAzure.execQuery(points_q)
-    .then(function (result) {
-        res.send(result);
-    })
-    .catch(function (err) {
-        console.log(err);
-    })
-});
-
-//get 3 random points for not registered/logged in users
-//CHECK IF NEWID NOT A HEAVY TASK, CHECK IF THE POINTS THAT RETURNED STANDS WITH CONDITION
-app.get("/Get3RendomPoints",function(req,res){
-    let random_q="SELECT TOP 3 * FROM  [Points] WHERE Ratings>60 ORDER BY NEWID()";
-    DButilsAzure.execQuery(random_q)
-    .then(function (result) {
-        res.send(result);
-    })
-    .catch(function (err) {
-        console.log(err);
-    })
-});
 

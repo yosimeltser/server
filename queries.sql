@@ -83,7 +83,7 @@
 -- ORDER BY Points.Ratings DESC 
 -- GO
 GO
-SELECT * FROM Points
+SELECT * FROM Questions
 GO
 GO
 DELETE  FROM Comments

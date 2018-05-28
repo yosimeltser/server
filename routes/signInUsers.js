@@ -49,17 +49,6 @@ router.get("/getFavorites", function (req, res) {
             console.log(err);
         })
 });
-router.get("/interestPoint/:id", function (req, res) {
-    var PointID = req.params.id;
-    let random_q = "SELECT  * FROM  [Points] WHERE ID=" + PointID;
-    DButilsAzure.execQuery(random_q)
-        .then(function (result) {
-            res.send(result);
-        })
-        .catch(function (err) {
-            console.log(err);
-        })
-});
 
 router.post('/Review', function (req, res) {
     var d = new Date();
@@ -109,6 +98,7 @@ router.post('/Review', function (req, res) {
             console.log(err);
         })
 });
+
 //returns the the last 2 saved point bt the user
 router.get("/GetLast2Saved", function (req, res) {
     var Username = req.decoded.payload.Username;
