@@ -15,16 +15,18 @@ var signInUsers = require('./routes/signInUsers')
 var retrieve = require('./routes/retrieve')
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
+var countries;
 //XML
 var parser = new xml2js.Parser();
-fs.readFile('./countries', function (err, data) {
-    parser.parseString(data, function (err, result) {
-        //var x=result['Countries']['Country'];
-        console.dir(result);
-        console.log('Done');
+app.get('/countries',function(req,res){
+    fs.readFile('countries.xml', function (err, data) {
+        parser.parseString(data, function (err, result) {
+        countries= result;    
+        res.send(result);
+        });
     });
-});
+})
+
 //local host 
 var port = 4000;
 
