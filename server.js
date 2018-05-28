@@ -3,16 +3,28 @@ var bodyParser = require('body-parser');
 var app = express();
 var cors = require('cors');
 var jwt = require('jsonwebtoken');
+//XML
+var fs = require('fs');
+var xml2js = require('xml2js');
+var parser = new xml2js.Parser();
+//
 app.use(cors());
 var DButilsAzure = require('./DButils');
 //only registered users can operate functions on the file regUsers. 
 var signInUsers = require('./routes/signInUsers')
-
+var retrieve = require('./routes/retrieve')
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-
-
+//XML
+var parser = new xml2js.Parser();
+fs.readFile('./countries', function (err, data) {
+    parser.parseString(data, function (err, result) {
+        //var x=result['Countries']['Country'];
+        console.dir(result);
+        console.log('Done');
+    });
+});
 //local host 
 var port = 4000;
 
@@ -81,7 +93,6 @@ app.post('/register', function (req, res) {
             + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
         DButilsAzure.execQuery(sql)
             .then(function (result) {
-                // res.send(result);
             })
             .catch(function (err) {
                 console.log(err);
@@ -97,20 +108,21 @@ app.post('/register', function (req, res) {
                 })
         }
         for (let i = 0; i < Questions.length; i++) {
-            for (let j = 0; j < Verifiers.length; j++) {
-                let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
-                    " VALUES ('" + Questions[i] + "','" + Verifiers[j] + "','" + Username + "' )";
-                DButilsAzure.execQuery(verifyy_q)
-                    .then(function (result) {
-                        res.send(result);
-                    })
-                    .catch(function (err) {
-                        console.log(err);
-                    })
-            }
+            let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
+                " VALUES ('" + Questions[i] + "','" + Verifiers[i] + "','" + Username + "' )";
+            DButilsAzure.execQuery(verifyy_q)
+                .then(function (result) {
+                    if (i == 1) {
+                        res.send(true);
+                    }
+                })
+                .catch(function (err) {
+                    res.send(false);
+                })
         }
     }
     else {
+        //what went wrong
         res.send(ans[1]);
     }
 });
@@ -141,43 +153,9 @@ app.post('/login', function (req, res) {
         })
 
 });
-//retrieve all user questions
-app.get("/restoreQuestions/:Username", function (req, res) {
-    var Username = req.params.Username;
-    let last_saved = "SELECT Question FROM Questions Where  FK_Username='" + Username + "'";
-    DButilsAzure.execQuery(last_saved)
-        .then(function (result) {
-            res.send(result);
-        })
-        .catch(function (err) {
-            console.log(err);
-        })
-});
 
-//check if the user answered right
-app.post("/restoreAnswer", function(req,res){
-    var Username= req.body.Username; 
-    var answer1=req.body.answer1;
-    var answer2=req.body.answer2;
-    console.log('sa');
-    let last_saved = "SELECT COUNT(Question) FROM Questions Where  FK_Username='"+Username+"' AND (Answer='"+answer1+ "' OR Answer='"+answer2+"')";
-    let sql = "select UserPass from registeredUsers  where Username='" + Username +"'";
-    DButilsAzure.execQuery(last_saved)
-            .then(function (result) {
-                var counter = JSON.parse(result[0][""]);
-                if (counter>=1) {
-                DButilsAzure.execQuery(sql)
-                    .then(function(result1){
-                        res.send(result1);
-                    })
-                }
-            })
-            .catch(function (err) {
-                console.log(err);
-            })
-});
 
-app.get("/getPoints", function (req, res) {
+app.get("/Points", function (req, res) {
     let points_q = "SELECT * FROM  [Points]";
     DButilsAzure.execQuery(points_q)
         .then(function (result) {
@@ -190,8 +168,8 @@ app.get("/getPoints", function (req, res) {
 
 //get 3 random points for not registered/logged in users
 //CHECK IF NEWID NOT A HEAVY TASK, CHECK IF THE POINTS THAT RETURNED STANDS WITH CONDITION
-app.get("/Get3RendomPoints", function (req, res) {
-    let random_q = "SELECT TOP 3 * FROM  [Points] WHERE Ratings>60 ORDER BY NEWID()";
+app.get("/3RandomPoints", function (req, res) {
+    let random_q = "SELECT TOP 3 * FROM  [Points] WHERE Ratings>=50 ORDER BY NEWID()";
     DButilsAzure.execQuery(random_q)
         .then(function (result) {
             res.send(result);
@@ -200,17 +178,23 @@ app.get("/Get3RendomPoints", function (req, res) {
             console.log(err);
         })
 });
-//everybodt can watch interest point info
+//everybody can watch interest point info
 app.get("/interestPoint/:id", function (req, res) {
     var PointID = req.params.id;
     let random_q = "SELECT  * FROM  [Points] WHERE ID=" + PointID;
-    DButilsAzure.execQuery(random_q)
+    let updateViews = "update Points SET Views=Views+1 where ID=" + PointID;
+    DButilsAzure.execQuery(updateViews)
+    .then(function (result) {
+        DButilsAzure.execQuery(random_q)
         .then(function (result) {
             res.send(result);
         })
-        .catch(function (err) {
-            console.log(err);
-        })
+    })
+    .catch(function (err) {
+        res.send(err);
+    })
+
+
 });
 
 
@@ -249,4 +233,5 @@ app.use('/Users', function (req, res, next) {
 
 });
 app.use('/Users', signInUsers);
+app.use('/retrieve', retrieve);
 

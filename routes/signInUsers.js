@@ -11,11 +11,10 @@ router.post('/saveInterestPoint', function (req, res) {
         " VALUES ('" + PointID + "','" + Username + "' )";
     DButilsAzure.execQuery(favorite_q)
         .then(function (result) {
-            //REMEBER TO REMOVE
-            res.send("Success");
+            res.send(true);
         })
         .catch(function (err) {
-            console.log(err);
+            res.send(false);
         })
 
 });
@@ -28,16 +27,15 @@ router.delete('/removeInterestPoint/:id', function (req, res) {
         " WHERE FK_ID=" + PointID + " AND FK_Username=" + "'" + Username + "'";
     DButilsAzure.execQuery(remove_favorite_q)
         .then(function (result) {
-            //REMEBER TO REMOVE
-            res.send("Success");
+            res.send(true);
         })
         .catch(function (err) {
-            console.log(err);
+            res.send(false);
         })
 
 });
 //returns the favorite list of the user
-router.get("/getFavorites", function (req, res) {
+router.get("/Favorites", function (req, res) {
     var Username = req.decoded.payload.Username;
     let verifyy_q = "SELECT p.PointName,p.Category FROM  [Points] p INNER JOIN [Favorites] f ON p.ID=f.FK_ID" +
         " WHERE f.FK_Username=" + "'" + Username + "'";
@@ -49,7 +47,7 @@ router.get("/getFavorites", function (req, res) {
             console.log(err);
         })
 });
-
+//inserts review or rank to the DB
 router.post('/Review', function (req, res) {
     var d = new Date();
     var comment_q;
@@ -58,10 +56,18 @@ router.post('/Review', function (req, res) {
     var comment = req.body.Review.Comment;
     var PointID = req.body.ID;
     var Rank = req.body.Review.Rank;
+    //only comment
     if (Rank === undefined) {
         comment_q = "INSERT INTO  [Comments] ([FK_ID],[FK_Username],[Comment],[Date_Comment])" +
             " VALUES (" + PointID + ",'" + Username + "','" + comment + "','" + date + "')";
-    } else {
+    } 
+    //only rank
+    else if (comment===undefined){
+        comment_q = "INSERT INTO  [Comments] ([FK_ID],[FK_Username],[Date_Comment], [Rank])" +
+            " VALUES (" + PointID + ",'" + Username + "','"+ date +"','"+Rank+"')";
+    }
+    //both rank and comment
+    else {
         comment_q = "INSERT INTO  [Comments] ([FK_ID],[FK_Username],[Comment],[Date_Comment],[Rank])" +
             " VALUES (" + PointID + ",'" + Username + "','" + comment + "','" + date + "','" + Rank + "' )";
     }
@@ -80,13 +86,6 @@ router.post('/Review', function (req, res) {
                         DButilsAzure.execQuery(update)
                             .then(function (res1) {
                                 res.send('update rank');
-                                //  var final = computeRating(PointID);
-                                // console.log(final);
-                                // let update = "UPDATE Points SET Ratings =" + final + " WHERE ID=" + PointID;
-                                // DButilsAzure.execQuery(update)
-                                //     .then(function (res1) {
-                                //         res1.send('update rank');
-                                //     })
                             })
                             .catch(function (err) {
                                 console.log(err);
@@ -94,15 +93,18 @@ router.post('/Review', function (req, res) {
 
                     });
             }
+            else{
+                res.send(true);
+            }
         }).catch(function (err) {
             console.log(err);
         })
 });
 
-//returns the the last 2 saved point bt the user
-router.get("/GetLast2Saved", function (req, res) {
+//returns the the last 2 saved point to the user
+router.get("/Last2Saved", function (req, res) {
     var Username = req.decoded.payload.Username;
-    let last_saved = "SELECT * FROM Points INNER JOIN" +
+    let last_saved = "SELECT Points.ID,Points.PointName,Points.Category,Points.Views,Points.Ratings,Points.ref FROM Points INNER JOIN" +
         "(SELECT TOP 2 FK_ID,  ROW_NUMBER() over (ORDER BY FK_ID DESC) AS Number FROM Favorites WHERE FK_Username=" + "'" + Username + "'" + ")" +
         "AS L ON L.FK_ID=Points.ID ";
     DButilsAzure.execQuery(last_saved)
@@ -114,10 +116,10 @@ router.get("/GetLast2Saved", function (req, res) {
         })
 });
 //returns 2 of the most popular POI by the categories that the user choose in registeration.
-router.get('/Get2InterestPoint', function (req, res) {
+router.get('/2InterestPoint', function (req, res) {
     var Username = req.decoded.payload.Username;
-    let popular = "SELECT TOP 2 * FROM Points INNER JOIN" +
-        "(SELECT Category FROM Categories WHERE FK_Username=" + "'" + Username + "'" + ") AS L ON L.Category=Points.Category" +
+    let popular = "SELECT TOP 2 * FROM Points INNER JOIN " +
+        "(SELECT Category FROM Categories WHERE FK_Username=" + "'" + Username + "'" + ") AS L ON L.Category=Points.Category " +
         "ORDER BY Points.Views DESC ";
     DButilsAzure.execQuery(popular)
         .then(function (result) {
@@ -128,20 +130,25 @@ router.get('/Get2InterestPoint', function (req, res) {
         })
 });
 
-function computeRating(PointID) {
-    return new Promise(function (fulfill, reject) {
-        var avg;
-        var id = parseInt(PointID);
-        var q = "select AVG(Rank) from Comments where FK_ID=" + id;
-        DButilsAzure.execQuery(q)
-            .then(function (result) {
-                console.log(result[0][""]);
-                avg = parseFloat(result[0][""]);
-                var calc = avg * 20;
-                resolve(calc);
-            })
-    });
-}
-
-
+router.post('/saveOrderedFavoriteList',function(req,res){
+    var Username = req.decoded.payload.Username;
+    var arrId= req.body.Ids; 
+    var q = "delete from favorites where FK_Username='" +Username + "'";
+    //delete all users favorite points 
+    //add them reordered
+    DButilsAzure.execQuery(q)
+        .then(function (result) {
+            for (let i = 0; i < arrId.length; i++) {
+                let favoritePoint = "INSERT INTO   [Favorites] ([FK_ID],[FK_Username])" +
+                    " VALUES ('" + arrId[i] + "','" + Username + "' )";
+                DButilsAzure.execQuery(favoritePoint)
+                    .then(function (result) {
+                        res.send(true);
+                    })
+                    .catch(function (err) {
+                        res.send(false);
+                    })
+            }
+        })
+})
 module.exports = router;
