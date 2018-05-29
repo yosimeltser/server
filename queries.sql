@@ -55,6 +55,7 @@
 --     FK_ID int  FOREIGN KEY REFERENCES Points(ID),
 --     FK_Username VARCHAR (8) FOREIGN KEY REFERENCES registeredUsers(Username),
 --     Comment VARCHAR(255) NOT NULL,
+--     Date_Comment VARCHAR(255)
 --     CONSTRAINT PK_Comments PRIMARY KEY (FK_ID,FK_Username)
 -- );
 -- GO
@@ -82,9 +83,19 @@
 -- (SELECT Category FROM Categories WHERE FK_Username='zoharavr') AS L ON L.Category=Points.Category
 -- ORDER BY Points.Ratings DESC 
 -- GO
+-----------------------------------------##
+-- GO
+-- CREATE TABLE Ranks(
+--     FK_ID int  FOREIGN KEY REFERENCES Points(ID),
+--     FK_Username VARCHAR (8) FOREIGN KEY REFERENCES registeredUsers(Username),
+--     Rankung int ,
+--     CONSTRAINT PK_Ranks PRIMARY KEY (FK_ID,FK_Username)
+-- );
+-- GO
+-----------------------------
 GO
-SELECT * FROM Questions
+SELECT * FROM Points
 GO
-GO
-DELETE  FROM Comments
-GO
+--  GO
+--  DROP TABLE   Ranks
+-- GO

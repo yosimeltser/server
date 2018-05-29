@@ -21,8 +21,7 @@ var parser = new xml2js.Parser();
 app.get('/countries',function(req,res){
     fs.readFile('countries.xml', function (err, data) {
         parser.parseString(data, function (err, result) {
-        countries= result;    
-        res.send(result);
+        res.send(result['Countries']['Country']);
         });
     });
 })
@@ -125,7 +124,7 @@ app.post('/register', function (req, res) {
     }
     else {
         //what went wrong
-        res.send(ans[1]);
+        res.send(ans['message']);
     }
 });
 //when you are logged in you are onboard, because we are creating a token for a session (24H).
