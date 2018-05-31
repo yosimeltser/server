@@ -18,10 +18,10 @@ app.use(bodyParser.json());
 var countries;
 //XML
 var parser = new xml2js.Parser();
-app.get('/countries',function(req,res){
+app.get('/countries', function (req, res) {
     fs.readFile('countries.xml', function (err, data) {
         parser.parseString(data, function (err, result) {
-        res.send(result['Countries']['Country']);
+            res.send(result['Countries']['Country']);
         });
     });
 })
@@ -48,13 +48,15 @@ function check_input(user, password) {
     };
     if (/^[a-zA-Z]+$/.test(user)) {
         if (user.length >= 2 && user.length <= 8) {
-            if (/^[a-z0-9]+$/.test(password)) {
-                if (password.length <= 10 && password.length >= 5) {
-                    ans.flag = true;
-                }
-                else {
-                    ans.flag = false;
-                    ans.message = "Password must be between 5 and 10"
+            if (/(?=.*[a-z])/.test(password)) {
+                if (/\d/.test(password)) {
+                    if (password.length <= 10 && password.length >= 5) {
+                        ans.flag = true;
+                    }
+                    else {
+                        ans.flag = false;
+                        ans.message = "Password must be between 5 and 10"
+                    }
                 }
             }
             else {
@@ -185,15 +187,15 @@ app.get("/interestPoint/:id", function (req, res) {
     let random_q = "SELECT  * FROM  [Points] WHERE ID=" + PointID;
     let updateViews = "update Points SET Views=Views+1 where ID=" + PointID;
     DButilsAzure.execQuery(updateViews)
-    .then(function (result) {
-        DButilsAzure.execQuery(random_q)
         .then(function (result) {
-            res.send(result);
+            DButilsAzure.execQuery(random_q)
+                .then(function (result) {
+                    res.send(result);
+                })
         })
-    })
-    .catch(function (err) {
-        res.send(err);
-    })
+        .catch(function (err) {
+            res.send(err);
+        })
 
 
 });
