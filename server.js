@@ -27,7 +27,7 @@ app.get('/countries', function (req, res) {
 })
 
 //local host 
-var port = 4000;
+var port = 8080;
 
 
 app.listen(port, function () {
@@ -142,13 +142,16 @@ app.post('/login', function (req, res) {
                 var payload = { Username: Username }
                 var token = jwt.sign(payload, superSecret, { expiresIn: "1d" });
                 res.json({
+                    Username: Username,
                     success: true,
                     message: 'Enjoy your token!',
                     token: token
                 });
             }
             else {
-                res.send('Your username or password is incorrect');
+                res.json({
+                    success: false,
+                });
             }
         })
         .catch(function (err) {
@@ -219,7 +222,10 @@ app.use('/Users', function (req, res, next) {
                 var decoded = jwt.decode(token, { complete: true });
                 req.decoded = decoded;
                 console.log(decoded.header);
-                console.log(decoded.payload)
+                console.log(decoded.payload);
+                if (req.originalUrl=="/Users"){
+                    res.send({userName: decoded.payload.Username, success: true, message: 'Authentication of your token went great.' })
+                }
                 next();
             }
         });
@@ -234,6 +240,19 @@ app.use('/Users', function (req, res, next) {
         });
     }
 
+});
+//GET THE LAST 2 RECENTLY ADDED COMMENTS
+app.get('/last2comments/:id',function(req, res){
+    var PointID = req.params.id;
+    let last = "SELECT top 2  FK_Username,comment,Date_Comment FROM  [Comments] WHERE FK_ID=" + PointID 
+    +" ORDER BY CONVERT(DATE, Date_Comment)  DESC";
+    DButilsAzure.execQuery(last)
+        .then(function (result) {
+            res.send(result);
+        })
+        .catch(function (err) {
+            res.send(err);
+        })
 });
 app.use('/Users', signInUsers);
 app.use('/retrieve', retrieve);

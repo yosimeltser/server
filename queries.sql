@@ -55,7 +55,7 @@
 --     FK_ID int  FOREIGN KEY REFERENCES Points(ID),
 --     FK_Username VARCHAR (8) FOREIGN KEY REFERENCES registeredUsers(Username),
 --     Comment VARCHAR(255) NOT NULL,
---     Date_Comment VARCHAR(255)
+--     Date_Comment VARCHAR(255),
 --     CONSTRAINT PK_Comments PRIMARY KEY (FK_ID,FK_Username)
 -- );
 -- GO
@@ -93,9 +93,19 @@
 -- );
 -- GO
 -----------------------------
-GO
-SELECT * FROM Points
-GO
+-- GO
+-- ALTER TABLE Points
+-- ADD Description VARCHAR(255)
+-- GO
+-- SELECT TOP 2 * FROM Comments where FK_ID='2'
+-- INNER join registeredUsers as r where r.id=
+-- ORDER BY CONVERT(DATE, Date_Comment )  DESC
+-- GO
+-- Select * from registeredUsers 
+-- GO
+-- INSERT INTO Comments(FK_ID,FK_Username,Comment,Date_Comment)
+-- VALUES (2,'shaked','blag','2019-11-1');
+-- GO
 --  GO
---  DROP TABLE   Ranks
+--  DROP TABLE   Comments
 -- GO
