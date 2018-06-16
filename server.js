@@ -92,7 +92,6 @@ app.post('/register', function (req, res) {
     //query
     var invalid=false;
     let ans = check_input(Username, UserPass);
-    if (ans['flag']) {
         var sql = "INSERT INTO  [registeredUsers]  ([Username],[FirstName],[LastName],[City],[Country] ,[Email], [UserPass])"
             + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
         DButilsAzure.execQuery(sql)
@@ -102,36 +101,23 @@ app.post('/register', function (req, res) {
                         " VALUES ('" + Categories[i] + "','" + Username + "' )";
                     DButilsAzure.execQuery(category_q)
                         .then(function (result) {
-                            for (let i = 0; i < Questions.length; i++) {
-                                let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
-                                    " VALUES ('" + Questions[i] + "','" + Verifiers[i] + "','" + Username + "' )";
-                                DButilsAzure.execQuery(verifyy_q)
-                                    .then(function (result) {
-                                        if (i == 1) {
-                                            res.send(true);
-                                        }
-                                    })
-                                    .catch(function (err) {
-                                        res.send(false);
-                                    })
-                            }
-                        })
-                        .catch(function (err) {
-                            console.log(err);
+                          
                         })
                 }
+                for (let i = 0; i < Questions.length; i++) {
+                    let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
+                        " VALUES ('" + Questions[i] + "','" + Verifiers[i] + "','" + Username + "' )";
+                    DButilsAzure.execQuery(verifyy_q)
+                        .then(function (result) {
+                            
+                        })
+                }              
+                res.send(true);
             })
-            .catch(function (err,primary) {
+            .catch(function (err) {
                 res.send("exist");
                  invalid=true;
             })
-      
-       
-    }
-    else {
-        //what went wrong
-        res.send(ans['message']);
-    }
 });
 //when you are logged in you are onboard, because we are creating a token for a session (24H).
 app.post('/login', function (req, res) {
