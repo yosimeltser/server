@@ -19,7 +19,7 @@ var countries;
 //XML
 var parser = new xml2js.Parser();
 app.get('/countries', function (req, res) {
-    fs.readFile('countries.xml', function (err, data) {
+    fs.readFile(__dirname +'/countries.xml', function (err, data) {
         parser.parseString(data, function (err, result) {
             res.send(result['Countries']['Country']);
         });
