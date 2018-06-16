@@ -37,7 +37,7 @@ router.delete('/removeInterestPoint/:id', function (req, res) {
 //returns the favorite list of the user
 router.get("/Favorites", function (req, res) {
     var Username = req.decoded.payload.Username;
-    let verifyy_q = "SELECT p.PointName,p.Category FROM  [Points] p INNER JOIN [Favorites] f ON p.ID=f.FK_ID" +
+    let verifyy_q = "SELECT p.ID,p.PointName,p.Category,p.Ratings FROM  [Points] p INNER JOIN [Favorites] f ON p.ID=f.FK_ID" +
         " WHERE f.FK_Username=" + "'" + Username + "'";
     DButilsAzure.execQuery(verifyy_q)
         .then(function (result) {
