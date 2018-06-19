@@ -9,10 +9,15 @@ router1.get("/Questions/:Username", function (req, res) {
     let last_saved = "SELECT Question FROM Questions Where  FK_Username='" + Username + "'";
     DButilsAzure.execQuery(last_saved)
         .then(function (result) {
-            res.send(result);
+            if (result.length==2) {
+                res.send(result);
+                }
+            else {
+                res.send(false);
+            }
         })
         .catch(function (err) {
-            console.log(err);
+            res.send(false);
         })
 });
 
@@ -33,7 +38,7 @@ router1.post("/Answers", function(req,res){
                     })
                 }
                 else {
-                    res.send("wrong answer");
+                    res.send(false);
                 }
 
             })

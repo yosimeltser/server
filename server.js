@@ -19,27 +19,12 @@ var countries;
 //XML
 var parser = new xml2js.Parser();
 app.get('/countries', function (req, res) {
-    fs.readFile(__dirname +'/countries.xml', function (err, data) {
+    fs.readFile(__dirname + '/countries.xml', function (err, data) {
         parser.parseString(data, function (err, result) {
             res.send(result['Countries']['Country']);
         });
     });
 })
-
-//local host 
-var port = 8080;
-
-
-app.listen(port, function () {
-    console.log('Example app listening on port ' + port);
-});
-var superSecret = "AKAunbreakable";
-app.use(function (req, res, next) {
-
-    console.log("server got request");
-    next();
-
-});
 //check that the user name & the password meet the criteria
 function check_input(user, password) {
     var ans = {
@@ -48,15 +33,13 @@ function check_input(user, password) {
     };
     if (/^[a-zA-Z]+$/.test(user)) {
         if (user.length >= 2 && user.length <= 8) {
-            if (/(?=.*[a-z])/.test(password)) {
-                if (/\d/.test(password)) {
-                    if (password.length <= 10 && password.length >= 5) {
-                        ans.flag = true;
-                    }
-                    else {
-                        ans.flag = false;
-                        ans.message = "Password must be between 5 and 10"
-                    }
+            if (/^[a-z0-9]+$/.test(password)) {
+                if (password.length <= 10 && password.length >= 5) {
+                    ans.flag = true;
+                }
+                else {
+                    ans.flag = false;
+                    ans.message = "Password must be between 5 and 10"
                 }
             }
             else {
@@ -75,6 +58,21 @@ function check_input(user, password) {
     }
     return ans;
 }
+//local host 
+var port = 8080;
+
+
+app.listen(port, function () {
+    console.log('Example app listening on port ' + port);
+});
+var superSecret = "AKAunbreakable";
+app.use(function (req, res, next) {
+
+    console.log("server got request");
+    next();
+
+});
+
 //register for our page 
 //insert new row into the DB
 app.post('/register', function (req, res) {
@@ -89,35 +87,40 @@ app.post('/register', function (req, res) {
     var Verifiers = req.body.Verifiers;
     var Username = req.body.Username;
     var UserPass = req.body.UserPass;
+    var ans = check_input(Username, UserPass);
     //query
-    var invalid=false;
-    let ans = check_input(Username, UserPass);
-        var sql = "INSERT INTO  [registeredUsers]  ([Username],[FirstName],[LastName],[City],[Country] ,[Email], [UserPass])"
-            + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
-        DButilsAzure.execQuery(sql)
-            .then(function (result) {
-                for (let i = 0; i < Categories.length; i++) {
-                    let category_q = "INSERT INTO  [Categories] ([Category],[FK_Username])" +
-                        " VALUES ('" + Categories[i] + "','" + Username + "' )";
-                    DButilsAzure.execQuery(category_q)
-                        .then(function (result) {
-                          
-                        })
-                }
-                for (let i = 0; i < Questions.length; i++) {
-                    let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
-                        " VALUES ('" + Questions[i] + "','" + Verifiers[i] + "','" + Username + "' )";
-                    DButilsAzure.execQuery(verifyy_q)
-                        .then(function (result) {
-                            
-                        })
-                }              
-                res.send(true);
-            })
-            .catch(function (err) {
-                res.send("exist");
-                 invalid=true;
-            })
+    var invalid = false;
+    if (ans.flag === false) {
+        res.json({ message: ans.message })
+        return;
+    }
+    //  let ans = check_input(Username, UserPass);
+    var sql = "INSERT INTO  [registeredUsers]  ([Username],[FirstName],[LastName],[City],[Country] ,[Email], [UserPass])"
+        + " VALUES('" + Username + "','" + FirstName + "','" + LastName + "','" + City + "','" + Country + "','" + Email + "','" + UserPass + "')";
+    DButilsAzure.execQuery(sql)
+        .then(function (result) {
+            for (let i = 0; i < Categories.length; i++) {
+                let category_q = "INSERT INTO  [Categories] ([Category],[FK_Username])" +
+                    " VALUES ('" + Categories[i] + "','" + Username + "' )";
+                DButilsAzure.execQuery(category_q)
+                    .then(function (result) {
+
+                    })
+            }
+            for (let i = 0; i < Questions.length; i++) {
+                let verifyy_q = "INSERT INTO  [Questions] ([Question],[Answer],[FK_Username])" +
+                    " VALUES ('" + Questions[i] + "','" + Verifiers[i] + "','" + Username + "' )";
+                DButilsAzure.execQuery(verifyy_q)
+                    .then(function (result) {
+
+                    })
+            }
+            res.send(true);
+        })
+        .catch(function (err) {
+            res.send(false);
+            invalid = true;
+        })
 });
 //when you are logged in you are onboard, because we are creating a token for a session (24H).
 app.post('/login', function (req, res) {
@@ -213,8 +216,8 @@ app.use('/Users', function (req, res, next) {
                 req.decoded = decoded;
                 console.log(decoded.header);
                 console.log(decoded.payload);
-                if (req.originalUrl=="/Users"){
-                    res.send({userName: decoded.payload.Username, success: true, message: 'Authentication of your token went great.' })
+                if (req.originalUrl == "/Users") {
+                    res.send({ userName: decoded.payload.Username, success: true, message: 'Authentication of your token went great.' })
                 }
                 next();
             }
@@ -232,10 +235,10 @@ app.use('/Users', function (req, res, next) {
 
 });
 //GET THE LAST 2 RECENTLY ADDED COMMENTS
-app.get('/last2comments/:id',function(req, res){
+app.get('/last2comments/:id', function (req, res) {
     var PointID = req.params.id;
-    let last = "SELECT top 2  FK_Username,comment,Date_Comment FROM  [Comments] WHERE FK_ID=" + PointID 
-    +" ORDER BY CONVERT(DATE, Date_Comment)  DESC";
+    let last = "SELECT top 2  FK_Username,comment,Date_Comment FROM  [Comments] WHERE FK_ID=" + PointID
+        + " ORDER BY CONVERT(DATE, Date_Comment)  DESC";
     DButilsAzure.execQuery(last)
         .then(function (result) {
             res.send(result);
