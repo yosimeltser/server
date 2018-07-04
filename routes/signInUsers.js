@@ -3,6 +3,7 @@ var express = require('express');
 var router = express.Router();
 var DButilsAzure = require('../DButils');
 
+
 //The user saves the points to his favorites
 router.post('/saveInterestPoint', function (req, res) {
     var Username = req.decoded.payload.Username;
@@ -38,7 +39,7 @@ router.delete('/removeInterestPoint/:id', function (req, res) {
 router.get("/Favorites", function (req, res) {
     var Username = req.decoded.payload.Username;
     let verifyy_q = "SELECT p.ID,p.PointName,p.Category,p.Ratings FROM  [Points] p INNER JOIN [Favorites] f ON p.ID=f.FK_ID" +
-        " WHERE f.FK_Username=" + "'" + Username + "'";
+        " WHERE f.FK_Username=" + "'" + Username + "'"+" ORDER BY f.Added";
     DButilsAzure.execQuery(verifyy_q)
         .then(function (result) {
             res.send(result);
@@ -112,7 +113,7 @@ router.get('/2InterestPoint', function (req, res) {
     var Username = req.decoded.payload.Username;
     let popular = "SELECT TOP 2 * FROM Points INNER JOIN " +
         "(SELECT Category FROM Categories WHERE FK_Username=" + "'" + Username + "'" + ") AS L ON L.Category=Points.Category " +
-        "ORDER BY Points.Views DESC ";
+        "Order by row_number() over (partition by Points.Category order by Views desc)";
     DButilsAzure.execQuery(popular)
         .then(function (result) {
             res.send(result);
